@@ -19,6 +19,7 @@ const (
 	LogLevelWarning
 	LogLevelInfo
 	LogLevelVerbose
+	LogLevelDebug
 )
 
 var logger *log.Logger
@@ -37,6 +38,8 @@ func (ll LogLevel) String() string {
 		return "INFO"
 	case LogLevelVerbose:
 		return "VERBOSE"
+	case LogLevelDebug:
+		return "DEBUG"
 	default:
 		return ""
 	}
@@ -54,6 +57,8 @@ func ParseLogLevel(arg string) (ll LogLevel, err error) {
 		ll = LogLevelInfo
 	case LogLevelVerbose.String():
 		ll = LogLevelVerbose
+	case LogLevelDebug.String():
+		ll = LogLevelDebug
 	default:
 		err = fmt.Errorf("invalid log level: %s", arg)
 	}
@@ -102,6 +107,10 @@ func FmtMsg(w io.Writer, prefix, format string, args ...any) {
 // Does a FmtMsg to stderr.
 func ErrMsg(prefix, format string, args ...any) {
 	FmtMsg(os.Stderr, prefix, format, args...)
+}
+
+func Debugf(format string, args ...any) {
+	LogMsg(LogLevelDebug, format, args...)
 }
 
 func Verbosef(format string, args ...any) {

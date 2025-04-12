@@ -67,16 +67,16 @@ func (z *ZipArchive) AddFile(in, out string) error {
 }
 
 func (z *ZipArchive) AddDir(in, out string) error {
-	Verbosef("AddDir(%q, %q)", in, out)
+	Debugf("AddDir(%q, %q)", in, out)
 	return WalkDir(in, z.walkDirFunc)
 }
 
 // Callback for our WalkDir function. Used to add discovered directories and
 // files to the archive.
 func (z *ZipArchive) walkDirFunc(path string, d fs.DirEntry, err error) error {
-	Verbosef("walkDirFunc(%s, %s, %v)", path, fs.FormatDirEntry(d), err)
+	Debugf("walkDirFunc(%s, %s, %v)", path, fs.FormatDirEntry(d), err)
 	if err != nil {
-		Verbosef("walkDirFunc called /w err=%v", err)
+		Debugf("walkDirFunc called /w err=%v", err)
 	}
 	if !d.IsDir() {
 		return z.AddFile(path, path)
