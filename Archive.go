@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"os"
 )
 
 type Archive interface {
@@ -20,12 +21,18 @@ type Archive interface {
 	// tree starting at the root of the filesystem adding each file to the
 	// root of the archive while maintaining the directory structure.
 	AddFS(fsys fs.FS) error
-	// AddFile copies the file `in` into the archive as `out`. Returns an error
-	// on failure.
-	AddFile(in, out string) error
-	// AddDir copies the directory tree `in` into the archive as `out`. Returns an error
-	// on failure.
-	AddDir(in, out string) error
+	// Creates a file entry. Data is copied from `fp` into the archive as `name`
+	// based on the original information provided in `stat`. Name should refer
+	// to the desired path in the archive (e.g., subdir/foo) and for openning
+	// from the current directory. It is expected that any parent directories
+	// relevant to `name` have already been created with AddDir(). The caller is
+	// responsible for closing fp.
+	AddFile(fp *os.File, stat os.FileInfo, name string) error
+	// Creates a directory entry. A directory record is added to the archive as
+	// `name` using the original information provided by `stat`. This is a non
+	// recursive operation, and it is expected that any parent directory already
+	// has an entry.
+	AddDir(dp fs.DirEntry, stat os.FileInfo, name string) error
 }
 
 // Factory function returning the correct Archive implementation for format.
@@ -56,5 +63,4 @@ func CopyData(dst io.Writer, dname string, src io.Reader, sname string) error {
 			err, sname, dname, nb)
 	}
 	return nil
-
 }

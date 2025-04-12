@@ -51,76 +51,18 @@ func (t *TarArchive) AddFS(fsys fs.FS) error {
 	return t.writer.AddFS(fsys)
 }
 
-func (t *TarArchive) AddFile(in, out string) error {
-	fp, err := os.Open(in)
-	if err != nil {
-		return err
-	}
-	defer fp.Close()
-	stat, err := fp.Stat()
-	if err != nil {
-		return err
-	}
-	hdr, err := NewTarHeader(in, stat, out)
-	if err != nil {
-		return err
-	}
-	if err = t.writer.WriteHeader(hdr); err != nil {
-		return err
-	}
-	return CopyData(t.writer, FormatName(t, out), fp, in)
-}
-
-// Callback for our WalkDir function. Used to add discovered directories and
-// files to the archive.
-func (t *TarArchive) walkDirFunc(path string, d fs.DirEntry, err error) error {
-	Debugf("walkDirFunc(%s, %s, %v)", path, fs.FormatDirEntry(d), err)
-	if err != nil {
-		Debugf("walkDirFunc called /w err=%v", err)
-	}
-	st, err := d.Info()
-	if err != nil {
-		Warningf("Skipping %v", path)
-		if d.IsDir() {
-			return fs.SkipDir
-		}
-		return nil
-	}
-	hdr, err := NewTarHeader(path, st, path)
-	if err != nil {
-		return err
-	}
-	Verbosef("+ %s (%s)", hdr.Name, hdr.Linkname)
-	if err = t.writer.WriteHeader(hdr); err != nil {
-		return err
-	}
-	if !d.IsDir() {
-		// return t.AddFile(path, path)
-		fp, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		return CopyData(t.writer, FormatName(t, path), fp, path)
-	}
-	return nil
-}
-
-func (t *TarArchive) AddDir(in, out string) error {
-	Debugf("AddDir(%q, %q)", in, out)
-	return WalkDir(in, t.walkDirFunc)
-}
-
 // Creates the best possible header from the stat info, and records the file as
 // `name` in the header.
-func NewTarHeader(src string, stat fs.FileInfo, name string) (*tar.Header, error) {
+func NewTarHeader(stat fs.FileInfo, name string) (*tar.Header, error) {
 	var err error
 
-	// Since stat may not give us a suitable name we can open (foo rather than
-	// subdir/foo), we need to do our own determination on the link name from
-	// the real source name.
+	// Since the Name() method on file/direntry/fileinfo structures typically
+	// return the base name (foo) rather than the real path (subdir/foo), we use
+	// that for attempting to read link info.
+
 	var linkName string
 	if stat.Mode().Type()&fs.ModeSymlink != 0 {
-		linkName, err = os.Readlink(src)
+		linkName, err = os.Readlink(name)
 		if err != nil {
 			Warningf("ReadLink: %v", err)
 		}
@@ -136,6 +78,7 @@ func NewTarHeader(src string, stat fs.FileInfo, name string) (*tar.Header, error
 	// Go's implementation always sets the obvious stat fields before an error occurs. The only time an
 	// error should be expected is if the file type is unsupported or an error
 	// occurs looking up ownership.
+
 	hdr, err := tar.FileInfoHeader(stat, linkName)
 	if err == nil {
 		hdr.Name = name
@@ -144,4 +87,34 @@ func NewTarHeader(src string, stat fs.FileInfo, name string) (*tar.Header, error
 		}
 	}
 	return hdr, err
+}
+
+func (t *TarArchive) writeHeader(hdr *tar.Header) error {
+	Verbosef("+ %s (%s)", hdr.Name, hdr.Linkname)
+	if err := t.writer.WriteHeader(hdr); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *TarArchive) AddFile(fp *os.File, stat os.FileInfo, name string) error {
+	hdr, err := NewTarHeader(stat, name)
+	if err != nil {
+		return err
+	}
+	if err = t.writeHeader(hdr); err != nil {
+		return nil
+	}
+	return CopyData(t.writer, FormatName(t, name), fp, name)
+}
+
+func (t *TarArchive) AddDir(dp fs.DirEntry, stat os.FileInfo, name string) error {
+	hdr, err := NewTarHeader(stat, name)
+	if err != nil {
+		return err
+	}
+	if err = t.writeHeader(hdr); err != nil {
+		return nil
+	}
+	return nil
 }

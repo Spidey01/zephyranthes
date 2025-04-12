@@ -4,11 +4,9 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -57,35 +55,4 @@ func BackupSpecsFromFile(name string) ([]BackupSpec, error) {
 		return nil, err
 	}
 	return UnmarshalBackupSpecs(data)
-}
-
-// Executes the backup specification using the provided context. Returns nil
-// once the job is complete, or an error is the operation failed.
-func (backup *BackupSpec) Do(ctx context.Context) error {
-	archive, err := CreateArchive(backup.Path, backup.Format)
-	if err != nil {
-		return err
-	}
-	defer archive.Close()
-	Verbosef("Archiving contents...")
-	for _, fn := range backup.Contents {
-		stat, err := os.Stat(fn)
-		if err != nil {
-			Warningf("Skipping %s: %v", fn, err)
-			continue
-		}
-		Verbosef("Inspecting %s", fs.FormatFileInfo(stat))
-		if stat.IsDir() {
-			Infof("Adding directory tree %s", stat.Name())
-			err = archive.AddDir(stat.Name(), fn)
-		} else {
-			Infof("Adding file %s", stat.Name())
-			err = archive.AddFile(stat.Name(), fn)
-		}
-		if err != nil {
-			Errorf("Failed to backup %s: %v", fn, err)
-			break
-		}
-	}
-	return nil
 }
