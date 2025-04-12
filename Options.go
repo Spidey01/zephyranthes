@@ -19,6 +19,8 @@ type Options struct {
 	LogFile string
 	// How verbose to make the log.
 	LogLevel LogLevel
+	// Perform a dry run.
+	DryRun bool
 	// Flag set for parsing the above options.
 	FlagSet *flag.FlagSet
 }

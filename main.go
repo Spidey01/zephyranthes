@@ -71,6 +71,9 @@ func backupFile(archive Archive, stat fs.FileInfo, path string) error {
 		return err
 	}
 	defer fp.Close()
+	if options.DryRun {
+		return nil
+	}
 	return archive.AddFile(fp, stat, path)
 }
 
@@ -94,6 +97,9 @@ func backupDir(archive Archive, root fs.DirEntry) error {
 		}
 		if !d.IsDir() {
 			return backupFile(archive, stat, path)
+		}
+		if options.DryRun {
+			return nil
 		}
 		return archive.AddDir(d, stat, path)
 	}
