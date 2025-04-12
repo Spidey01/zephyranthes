@@ -40,6 +40,7 @@ func NewOptions() *Options {
 		opts.LogLevel, err = ParseLogLevel(arg)
 		return err
 	})
+	fs.BoolVar(&opts.DryRun, "dry-run", false, "")
 	opts.FlagSet = fs
 	return &opts
 }

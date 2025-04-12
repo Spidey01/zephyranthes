@@ -4,6 +4,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"io/fs"
@@ -38,7 +39,10 @@ type Archive interface {
 func CreateArchive(name, format string) (Archive, error) {
 	switch format {
 	case FormatTar:
-		return NewTarArchive(name)
+		return NewTarArchive(name, nil)
+	case FormatTGZ, FormatTarGz:
+		filter := func(w io.Writer) io.WriteCloser { return gzip.NewWriter(w) }
+		return NewTarArchive(name, filter)
 	case FormatZip:
 		return NewZipArchive(name)
 	default:

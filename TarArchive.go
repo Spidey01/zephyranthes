@@ -13,20 +13,36 @@ import (
 
 type TarArchive struct {
 	Archive
-	file   *os.File
-	writer *tar.Writer
+	file       *os.File
+	writer     *tar.Writer
+	compressor io.WriteCloser
 }
 
-// Creates a new tape archive (tar) at the specified path.
-func NewTarArchive(path string) (*TarArchive, error) {
+type FilterFunc func(io.Writer) io.WriteCloser
+
+// Creates a new tape archive (tar) at the specified path. If filter is not nil,
+// it will be called with the file handle to create a filter. This can be used
+// to create a compressed tape archive.
+func NewTarArchive(path string, filter FilterFunc) (*TarArchive, error) {
 	fp, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}
 
+	var writer *tar.Writer
+	var compressor io.WriteCloser
+	if filter != nil {
+		compressor = filter(fp)
+		writer = tar.NewWriter(compressor)
+	} else {
+		compressor = nil
+		writer = tar.NewWriter(fp)
+	}
+
 	return &TarArchive{
-		file:   fp,
-		writer: tar.NewWriter(fp),
+		file:       fp,
+		writer:     writer,
+		compressor: compressor,
 	}, nil
 }
 
@@ -37,6 +53,11 @@ func (t *TarArchive) Name() string {
 func (t *TarArchive) Close() error {
 	if err := t.writer.Close(); err != nil {
 		return err
+	}
+	if t.compressor != nil {
+		if err := t.compressor.Close(); err != nil {
+			return err
+		}
 	}
 	if err := t.file.Close(); err != nil {
 		return err

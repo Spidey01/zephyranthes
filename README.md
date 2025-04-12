@@ -44,3 +44,14 @@ The following JSON defines the same thing, except as an uncompressed tape archiv
     ]
 ]
 ```
+
+### Formats
+
+The `format` field can be one of the specified values:
+
+| Value     | Output format       |
+| --------- | ------------------- |
+| "zip"     | Zip archive         |
+| "tar"     | TAR archive         |
+| "tgz"     | Gzip compressed TAR |
+| "tar.gz"  | Alias for tgz       |
