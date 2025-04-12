@@ -5,6 +5,7 @@ package main
 
 import (
 	"archive/zip"
+	"io"
 	"io/fs"
 	"os"
 	"strings"
@@ -67,8 +68,8 @@ func NewZipHeader(stat fs.FileInfo, name string) (*zip.FileHeader, error) {
 	return hdr, nil
 }
 
-func (z *ZipArchive) AddFile(fp *os.File, stat os.FileInfo, name string) error {
-	Debugf("AddFile(): fp.Name(): %q stat.Size(): %d name: %q", fp.Name(), stat.Size(), name)
+func (z *ZipArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) error {
+	Debugf("AddFile(): stat.Name(): %q name: %q", stat.Name(), name)
 	hdr, err := NewZipHeader(stat, name)
 	if err != nil {
 		return err
@@ -77,11 +78,11 @@ func (z *ZipArchive) AddFile(fp *os.File, stat os.FileInfo, name string) error {
 	if err != nil {
 		return err
 	}
-	return CopyData(w, FormatName(z, name), fp, fp.Name())
+	return CopyData(w, FormatName(z, name), fp, name)
 }
 
-func (z *ZipArchive) AddDir(dp fs.DirEntry, stat os.FileInfo, name string) error {
-	Debugf("AddDirEntry(): dp.Name(): %q stat.Size(): %d name: %q", dp.Name(), stat.Size(), name)
+func (z *ZipArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error {
+	Debugf("AddDirEntry(): stat.Name(): %q name: %q", stat.Name(), name)
 	path := name
 	if !strings.HasSuffix(path, "/") {
 		path += "/"

@@ -5,6 +5,7 @@ package main
 
 import (
 	"archive/tar"
+	"io"
 	"io/fs"
 	"os"
 	"strings"
@@ -97,7 +98,8 @@ func (t *TarArchive) writeHeader(hdr *tar.Header) error {
 	return nil
 }
 
-func (t *TarArchive) AddFile(fp *os.File, stat os.FileInfo, name string) error {
+func (t *TarArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) error {
+	Debugf("AddFile(): stat.Name(): %q name: %q", stat.Name(), name)
 	hdr, err := NewTarHeader(stat, name)
 	if err != nil {
 		return err
@@ -108,7 +110,8 @@ func (t *TarArchive) AddFile(fp *os.File, stat os.FileInfo, name string) error {
 	return CopyData(t.writer, FormatName(t, name), fp, name)
 }
 
-func (t *TarArchive) AddDir(dp fs.DirEntry, stat os.FileInfo, name string) error {
+func (t *TarArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error {
+	Debugf("AddDirEntry(): stat.Name(): %q name: %q", stat.Name(), name)
 	hdr, err := NewTarHeader(stat, name)
 	if err != nil {
 		return err

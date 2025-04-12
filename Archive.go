@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"os"
 )
 
 type Archive interface {
@@ -27,12 +26,12 @@ type Archive interface {
 	// from the current directory. It is expected that any parent directories
 	// relevant to `name` have already been created with AddDir(). The caller is
 	// responsible for closing fp.
-	AddFile(fp *os.File, stat os.FileInfo, name string) error
+	AddFile(fp io.Reader, stat fs.FileInfo, name string) error
 	// Creates a directory entry. A directory record is added to the archive as
 	// `name` using the original information provided by `stat`. This is a non
 	// recursive operation, and it is expected that any parent directory already
 	// has an entry.
-	AddDir(dp fs.DirEntry, stat os.FileInfo, name string) error
+	AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error
 }
 
 // Factory function returning the correct Archive implementation for format.
