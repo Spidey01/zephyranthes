@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Defines the individual backup job and resulting archive.
 type BackupSpec struct {
 	Name     string   `yaml:"name" json:"name"`
 	Path     string   `yaml:"path" json:"path"`
@@ -58,6 +59,8 @@ func BackupSpecsFromFile(name string) ([]BackupSpec, error) {
 	return UnmarshalBackupSpecs(data)
 }
 
+// Executes the backup specification using the provided context. Returns nil
+// once the job is complete, or an error is the operation failed.
 func (backup *BackupSpec) Do(ctx context.Context) error {
 	archive, err := CreateArchive(backup.Path, backup.Format)
 	if err != nil {

@@ -16,6 +16,7 @@ type TarArchive struct {
 	writer *tar.Writer
 }
 
+// Creates a new tape archive (tar) at the specified path.
 func NewTarArchive(path string) (*TarArchive, error) {
 	fp, err := os.Create(path)
 	if err != nil {
@@ -70,6 +71,8 @@ func (t *TarArchive) AddFile(in, out string) error {
 	return CopyData(t.writer, FormatName(t, out), fp, in)
 }
 
+// Callback for our WalkDir function. Used to add discovered directories and
+// files to the archive.
 func (t *TarArchive) walkDirFunc(path string, d fs.DirEntry, err error) error {
 	Verbosef("walkDirFunc(%s, %s, %v)", path, fs.FormatDirEntry(d), err)
 	if err != nil {

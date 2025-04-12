@@ -16,6 +16,7 @@ type ZipArchive struct {
 	writer *zip.Writer
 }
 
+// Creates a new zip archive at the specified path.
 func NewZipArchive(path string) (*ZipArchive, error) {
 	fp, err := os.Create(path)
 	if err != nil {
@@ -56,7 +57,8 @@ func (z *ZipArchive) AddFile(in, out string) error {
 		return err
 	}
 	defer fp.Close()
-	// Takes care of creating a suitable file header, but we may want to get fancier.
+	// Takes care of creating a suitable file header, but we may want to get
+	// fancier.
 	w, err := z.writer.Create(out)
 	if err != nil {
 		return err
@@ -69,6 +71,8 @@ func (z *ZipArchive) AddDir(in, out string) error {
 	return WalkDir(in, z.walkDirFunc)
 }
 
+// Callback for our WalkDir function. Used to add discovered directories and
+// files to the archive.
 func (z *ZipArchive) walkDirFunc(path string, d fs.DirEntry, err error) error {
 	Verbosef("walkDirFunc(%s, %s, %v)", path, fs.FormatDirEntry(d), err)
 	if err != nil {
