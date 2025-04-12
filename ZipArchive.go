@@ -57,6 +57,19 @@ func (z *ZipArchive) AddFS(fsys fs.FS) error {
 // default constructs most field, which in turn leads to loss of info like the
 // timestamps.
 func NewZipHeader(stat fs.FileInfo, name string) (*zip.FileHeader, error) {
+	// Info-Zip and a few others have a means of storing Unix symbolic links in
+	// the archive, but I'm not familiar with this extension, and Go's
+	// implementation doesn't seem to support it.
+	if stat.Mode().Type()&fs.ModeSymlink != 0 {
+		linkDestination, err := os.Readlink(name)
+		if err != nil {
+			Errorf("reading symlink %q failed: %v", name, err)
+			linkDestination = ""
+		}
+		Warningf("Archive member %q refers to a symlink to %q and will be stored as that file's contents rather than as a symbolic link.",
+			name, linkDestination)
+		Verbosef("To work around this ")
+	}
 	// This handles setting the fields related to uncompressed size and timestamps.
 	hdr, err := zip.FileInfoHeader(stat)
 	if err != nil {
