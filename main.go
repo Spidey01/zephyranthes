@@ -48,12 +48,12 @@ func backup(ctx context.Context, spec BackupSpec) error {
 			Warningf("Skipping %s: %v", fn, err)
 			continue
 		}
-		Verbosef("Inspecting %s", fs.FormatFileInfo(stat))
+		Verbosef("Inspecting %s (%s)", fn, fs.FormatFileInfo(stat))
 		if stat.IsDir() {
-			Infof("Adding directory tree %s", stat.Name())
-			err = backupDir(archive, fs.FileInfoToDirEntry(stat))
+			Infof("Adding directory tree %s", fn)
+			err = backupDir(archive, fn)
 		} else {
-			Infof("Adding file %s", stat.Name())
+			Infof("Adding file %s", fn)
 			err = backupFile(archive, stat, fn)
 		}
 		if err != nil {
@@ -78,7 +78,7 @@ func backupFile(archive Archive, stat fs.FileInfo, path string) error {
 }
 
 // Recursively adds the specified root to the archive.
-func backupDir(archive Archive, root fs.DirEntry) error {
+func backupDir(archive Archive, root string) error {
 	fn := func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			// N.B. if err is set, d is nil.
@@ -103,5 +103,5 @@ func backupDir(archive Archive, root fs.DirEntry) error {
 		}
 		return archive.AddDir(d, stat, path)
 	}
-	return WalkDir(root.Name(), fn)
+	return WalkDir(root, fn)
 }
