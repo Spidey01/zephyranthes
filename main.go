@@ -40,6 +40,9 @@ func backup(ctx context.Context, spec BackupSpec) error {
 	defer archive.Close()
 	Verbosef("Archiving contents...")
 	for _, fn := range spec.Contents {
+		if err = ctx.Err(); err != nil {
+			return err
+		}
 		stat, err := os.Stat(fn)
 		if err != nil {
 			Warningf("Skipping %s: %v", fn, err)
