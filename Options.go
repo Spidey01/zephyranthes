@@ -33,7 +33,7 @@ func NewOptions() *Options {
 	fs.BoolVar(&opts.Verbose, "v", false, "Produce verbose output.")
 	fs.BoolVar(&opts.Verbose, "verbose", false, "Produce verbose output.")
 	fs.StringVar(&opts.LogFile, "log-file", "", "Log what we're doing to the specified FILE.")
-	fs.Func("log-level", "How verbose the log file is. One of: fatal, error, warning, info, verbose", func(arg string) error {
+	fs.Func("log-level", "How verbose the log file is. One of: fatal, error, warning, info, verbose, debug", func(arg string) error {
 		var err error
 		opts.LogLevel, err = ParseLogLevel(arg)
 		return err
