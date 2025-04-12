@@ -14,9 +14,13 @@ import (
 
 // Defines the individual backup job and resulting archive.
 type BackupSpec struct {
-	Name     string   `yaml:"name" json:"name"`
-	Path     string   `yaml:"path" json:"path"`
-	Format   string   `yaml:"format" json:"format"`
+	// Name of the backup job for debugging.
+	Name string `yaml:"name" json:"name"`
+	// Path to the output archive
+	Path string `yaml:"path" json:"path"`
+	// Which format to use for path.
+	Format string `yaml:"format" json:"format"`
+	// What to stuff in the archive.
 	Contents []string `yaml:"contents" json:"contents"`
 }
 
