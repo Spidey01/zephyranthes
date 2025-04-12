@@ -77,9 +77,14 @@ func backupFile(archive Archive, stat fs.FileInfo, path string) error {
 // Recursively adds the specified root to the archive.
 func backupDir(archive Archive, root fs.DirEntry) error {
 	fn := func(path string, d fs.DirEntry, err error) error {
-		Debugf("walkDirFunc(%s, %s, %v)", path, fs.FormatDirEntry(d), err)
 		if err != nil {
-			Debugf("walkDirFunc called /w err=%v", err)
+			// N.B. if err is set, d is nil.
+			Debugf("walkDirFunc(%s, nil, %v)", path, err)
+			// We can return nil or fs.SkipDir/fs.SkipAll to ignore this tree,
+			// or an error to bork the operation.
+			return err
+		} else {
+			Debugf("walkDirFunc(%s, %s, %v)", path, fs.FormatDirEntry(d), err)
 		}
 		// Since it's valid on files and directories, we can stat before caring
 		// which it references.
