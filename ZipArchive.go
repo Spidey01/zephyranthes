@@ -57,9 +57,15 @@ func (z *ZipArchive) AddFile(in, out string) error {
 		return err
 	}
 	defer fp.Close()
-	// Takes care of creating a suitable file header, but we may want to get
-	// fancier.
-	w, err := z.writer.Create(out)
+	stat, err := fp.Stat()
+	if err != nil {
+		return err
+	}
+	hdr, err := NewZipHeader(in, stat, out)
+	if err != nil {
+		return err
+	}
+	w, err := z.writer.CreateHeader(hdr)
 	if err != nil {
 		return err
 	}
@@ -91,4 +97,20 @@ func (z *ZipArchive) walkDirFunc(path string, d fs.DirEntry, err error) error {
 		}
 	}
 	return nil
+}
+
+// Creates a suitable file header based on the stat information. Using
+// zip.Writer.Create() on the path instead of providing a real file header,
+// default constructs most field, which in turn leads to loss of info like the
+// timestamps.
+func NewZipHeader(src string, stat fs.FileInfo, name string) (*zip.FileHeader, error) {
+	// This handles setting the fields related to uncompressed size and timestamps.
+	hdr, err := zip.FileInfoHeader(stat)
+	if err != nil {
+		return nil, err
+	}
+	// Ensure the name is built correctly. E.g., subdir/foo rather than foo.
+	hdr.Name = name
+	hdr.Method = zip.Deflate
+	return hdr, nil
 }
