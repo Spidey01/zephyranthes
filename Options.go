@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Zlib
-// Copyright 2024, Terry M. Poulin.
+// Copyright 2024-2025, Terry M. Poulin.
 
 package main
 
@@ -17,6 +17,8 @@ type Options struct {
 	Help bool
 	// Log details to this path.
 	LogFile string
+	// How verbose to make the log.
+	LogLevel LogLevel
 	// Flag set for parsing the above options.
 	FlagSet *flag.FlagSet
 }
@@ -30,7 +32,12 @@ func NewOptions() *Options {
 	fs.BoolVar(&opts.Help, "help", false, "Show usage.")
 	fs.BoolVar(&opts.Verbose, "v", false, "Produce verbose output.")
 	fs.BoolVar(&opts.Verbose, "verbose", false, "Produce verbose output.")
-	fs.StringVar(&opts.LogFile, "log-file", "", "log what we're doing to the specified FILE.")
+	fs.StringVar(&opts.LogFile, "log-file", "", "Log what we're doing to the specified FILE.")
+	fs.Func("log-level", "How verbose the log file is. One of: fatal, error, warning, info, verbose", func(arg string) error {
+		var err error
+		opts.LogLevel, err = parseLogLevel(arg)
+		return err
+	})
 	opts.FlagSet = fs
 	return &opts
 }

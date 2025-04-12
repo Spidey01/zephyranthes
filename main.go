@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Zlib
-// Copyright 2024, Terry M. Poulin.
+// Copyright 2024-2025, Terry M. Poulin.
 package main
 
 import "context"
@@ -8,7 +8,7 @@ var options = NewOptions()
 
 func main() {
 	options.MustParseArgs()
-	setupLogging(options.LogFile)
+	setupLogging(options.LogLevel, options.LogFile)
 	for _, arg := range options.Args() {
 		Verbosef("Parsing %s", arg)
 		specs, err := BackupSpecsFromFile(arg)

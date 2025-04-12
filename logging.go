@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Zlib
-// Copyright 2024, Terry M. Poulin.
+// Copyright 2024-2025, Terry M. Poulin.
 package main
 
 import (
@@ -11,9 +11,57 @@ import (
 	"strings"
 )
 
-var logger *log.Logger
+type LogLevel int
 
-func setupLogging(logFile string) error {
+const (
+	LogLevelFatal LogLevel = iota
+	LogLevelError
+	LogLevelWarning
+	LogLevelInfo
+	LogLevelVerbose
+)
+
+var logger *log.Logger
+var level LogLevel
+
+func (ll LogLevel) String() string {
+	switch ll {
+	case LogLevelFatal:
+		return "FATAL"
+	case LogLevelError:
+		return "ERROR"
+	case LogLevelWarning:
+		return "WARNING"
+	case LogLevelInfo:
+		return "INFO"
+	case LogLevelVerbose:
+		return "VERBOSE"
+	default:
+		return ""
+	}
+}
+
+func parseLogLevel(arg string) (ll LogLevel, err error) {
+	switch strings.ToUpper(arg) {
+	case LogLevelFatal.String():
+		ll = LogLevelFatal
+	case LogLevelError.String():
+		ll = LogLevelError
+	case LogLevelWarning.String():
+		ll = LogLevelWarning
+	case LogLevelInfo.String():
+		ll = LogLevelInfo
+	case LogLevelVerbose.String():
+		ll = LogLevelVerbose
+	default:
+		err = fmt.Errorf("invalid log level: %s", arg)
+	}
+	return
+}
+
+// Initializes the log level and sets up a logger for the specified file.
+func setupLogging(logLevel LogLevel, logFile string) error {
+	level = logLevel
 	if logFile != "" {
 		fp, err := os.Create(logFile)
 		if err != nil {
@@ -27,8 +75,8 @@ func setupLogging(logFile string) error {
 
 // Writes the formatted message to the active log file with the given prefix.
 // Used by the various log functions to set a log level like prefix.
-func LogMsg(prefix, format string, args ...any) {
-	if logger != nil {
+func LogMsg(prefix LogLevel, format string, args ...any) {
+	if logger != nil && prefix <= level {
 		logger.Println(prefix, fmt.Sprintf(format, args...))
 	}
 }
@@ -57,34 +105,34 @@ func ErrMsg(prefix, format string, args ...any) {
 func Verbosef(format string, args ...any) {
 	if options.Verbose {
 		FmtMsg(os.Stdout, "", format, args...)
-		LogMsg("VERBOSE:", format, args...)
+		LogMsg(LogLevelVerbose, format, args...)
 	}
 }
 
 func Infof(format string, args ...any) {
 	FmtMsg(os.Stdout, "", format, args...)
-	LogMsg("INFO:", format, args...)
+	LogMsg(LogLevelInfo, format, args...)
 }
 
 func Warningf(format string, args ...any) {
 	ErrMsg("WARNING:", format, args...)
-	LogMsg("WARNING:", format, args...)
+	LogMsg(LogLevelWarning, format, args...)
 }
 
 func Errorf(format string, args ...any) {
 	ErrMsg("ERROR:", format, args...)
-	LogMsg("ERROR:", format, args...)
+	LogMsg(LogLevelError, format, args...)
 }
 
 func Fatalf(format string, args ...any) {
 	ErrMsg("FATAL:", format, args...)
-	LogMsg("FATAL:", format, args...)
+	LogMsg(LogLevelFatal, format, args...)
 	os.Exit(1)
 }
 
 // Like Fatalf, but the prefix for stderr is the program name.
 func Die(format string, args ...any) {
 	ErrMsg(options.Name(), format, args...)
-	LogMsg("FATAL:", format, args...)
+	LogMsg(LogLevelFatal, format, args...)
 	os.Exit(1)
 }
