@@ -8,7 +8,7 @@ var options = NewOptions()
 
 func main() {
 	options.MustParseArgs()
-	setupLogging(options.LogLevel, options.LogFile)
+	SetupLogging(options.Name(), options.LogLevel, options.LogFile)
 	for _, arg := range options.Args() {
 		Verbosef("Parsing %s", arg)
 		specs, err := BackupSpecsFromFile(arg)

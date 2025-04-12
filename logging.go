@@ -22,7 +22,8 @@ const (
 )
 
 var logger *log.Logger
-var level LogLevel
+var logLevel LogLevel
+var logPrefix string
 
 func (ll LogLevel) String() string {
 	switch ll {
@@ -41,7 +42,7 @@ func (ll LogLevel) String() string {
 	}
 }
 
-func parseLogLevel(arg string) (ll LogLevel, err error) {
+func ParseLogLevel(arg string) (ll LogLevel, err error) {
 	switch strings.ToUpper(arg) {
 	case LogLevelFatal.String():
 		ll = LogLevelFatal
@@ -60,14 +61,15 @@ func parseLogLevel(arg string) (ll LogLevel, err error) {
 }
 
 // Initializes the log level and sets up a logger for the specified file.
-func setupLogging(logLevel LogLevel, logFile string) error {
-	level = logLevel
+func SetupLogging(prefix string, level LogLevel, logFile string) error {
+	logPrefix = prefix
+	logLevel = level
 	if logFile != "" {
 		fp, err := os.Create(logFile)
 		if err != nil {
 			return err
 		}
-		logger = log.New(fp, options.Name()+" ", log.LstdFlags|log.Lmsgprefix)
+		logger = log.New(fp, logPrefix+" ", log.LstdFlags|log.Lmsgprefix)
 		context.AfterFunc(context.Background(), func() { fp.Close() })
 	}
 	return nil
@@ -76,7 +78,7 @@ func setupLogging(logLevel LogLevel, logFile string) error {
 // Writes the formatted message to the active log file with the given prefix.
 // Used by the various log functions to set a log level like prefix.
 func LogMsg(prefix LogLevel, format string, args ...any) {
-	if logger != nil && prefix <= level {
+	if logger != nil && prefix <= logLevel {
 		logger.Println(prefix, fmt.Sprintf(format, args...))
 	}
 }
@@ -105,8 +107,8 @@ func ErrMsg(prefix, format string, args ...any) {
 func Verbosef(format string, args ...any) {
 	if options.Verbose {
 		FmtMsg(os.Stdout, "", format, args...)
-		LogMsg(LogLevelVerbose, format, args...)
 	}
+	LogMsg(LogLevelVerbose, format, args...)
 }
 
 func Infof(format string, args ...any) {
