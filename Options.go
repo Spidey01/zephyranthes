@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path"
 )
@@ -41,6 +42,13 @@ func NewOptions() *Options {
 		return err
 	})
 	fs.BoolVar(&opts.DryRun, "dry-run", false, "")
+	fs.Usage = func() {
+		out := fs.Output()
+		io.WriteString(out, fmt.Sprintf("usage: %s [options] [file ...]\n", opts.Name()))
+		io.WriteString(out, "\nOptions:\n\n")
+		fs.PrintDefaults()
+		io.WriteString(out, "\nEach file is parsed to define the backup archive(s) to create. Defaults to reading from standard input.\n")
+	}
 	opts.FlagSet = fs
 	return &opts
 }

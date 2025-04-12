@@ -8,6 +8,28 @@ an archive is generated.
 
 ## Usage
 
+```sh
+zephyr -h
+usage: zephyr [options] [file ...]
+
+Options:
+
+  -dry-run
+    
+  -h    Show usage.
+  -help
+        Show usage.
+  -log-file string
+        Log what we're doing to the specified FILE.
+  -log-level value
+        How verbose the log file is. One of: fatal, error, warning, info, verbose, debug
+  -v    Produce verbose output.
+  -verbose
+        Produce verbose output.
+
+Each file is parsed to define the backup archive(s) to create. Defaults to reading from standard input.
+```
+
 ## Backup Specs
 
 Backups may be defined in either YAML or JSON format. The file is a list of
