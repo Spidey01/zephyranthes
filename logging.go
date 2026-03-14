@@ -69,7 +69,10 @@ func ParseLogLevel(arg string) (ll LogLevel, err error) {
 func SetupLogging(prefix string, level LogLevel, logFile string) error {
 	logPrefix = prefix
 	logLevel = level
-	if logFile != "" {
+	flags := log.LstdFlags | log.Lmsgprefix
+	if logFile == "-" {
+		logger = log.New(os.Stdout, logPrefix+" ", flags)
+	} else if logFile != "" {
 		fp, err := os.Create(logFile)
 		if err != nil {
 			return err
