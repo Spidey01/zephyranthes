@@ -5,14 +5,15 @@ package main
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 type ZipArchive struct {
-	Archive
 	file   *os.File
 	writer *zip.Writer
 }
@@ -116,6 +117,55 @@ func (z *ZipArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error
 	_, err = z.writer.CreateHeader(hdr)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// Implements [ExtractableArchive.ExtractTo] for unit testing of ZIP archives.
+func (z *ZipArchive) ExtractTo(where string) error {
+	// Since this is only for unit tests, just make a separate reader instead of
+	// seeking back.
+	reader, err := zip.OpenReader(z.Name())
+	if err != nil {
+		return fmt.Errorf("zip.OpenReader(%q) failed: %v", z.Name(), err)
+	}
+	defer reader.Close()
+	for _, file := range reader.File {
+		path := filepath.Join(where, file.Name)
+		// Sanitize the file name to prevent zip slip style overwrites.
+		if !strings.HasPrefix(path, filepath.Clean(where)+string(os.PathSeparator)) {
+			return fmt.Errorf("invalid file path: %s", path)
+		}
+		Debugf("Extracting %q -> %q", file.Name, path)
+
+		if file.FileInfo().IsDir() {
+			if err = os.MkdirAll(path, file.Mode()); err != nil {
+				return fmt.Errorf("extracting directory %q failed: %v", path, err)
+			}
+			continue
+		}
+
+		// This might get perms wrong if the slice isn't ordered to have parent
+		// directories first, but we're extending the codec to support unit
+		// testing not writing a real archive extractor.
+		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+			return fmt.Errorf("os.MkdrDir(%q) failed: %v", filepath.Dir(path), err)
+		}
+		src, err := file.Open()
+		if err != nil {
+			return fmt.Errorf("file.Open() for %q failed: %v", file.Name, err)
+		}
+		// For the same reason, we don't expect test data to backup pending file
+		// closes that drastically :P.
+		defer src.Close()
+		dst, err := os.Create(path)
+		if err != nil {
+			return fmt.Errorf("os.Create(%q) failed: %v", path, err)
+		}
+		defer dst.Close()
+		if err = CopyData(dst, path, src, file.Name); err != nil {
+			return err
+		}
 	}
 	return nil
 }

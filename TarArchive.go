@@ -5,14 +5,16 @@ package main
 
 import (
 	"archive/tar"
+	"compress/gzip"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 type TarArchive struct {
-	Archive
 	file       *os.File
 	writer     *tar.Writer
 	compressor io.WriteCloser
@@ -147,6 +149,66 @@ func (t *TarArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error
 	}
 	if err = t.writeHeader(hdr); err != nil {
 		return nil
+	}
+	return nil
+}
+
+// Implements [ExtractableArchive.ExtractTo] for unit testing of tape archives.
+func (t *TarArchive) ExtractTo(where string) error {
+	// Since we only use this for unit tests, this is just a quick and dirty
+	// extraction. Zephyranthes is for backing up files to archives, it doesn't
+	// restore them ;).
+	fp, err := os.Open(t.Name())
+	if err != nil {
+		return fmt.Errorf("os.Open(%q) failed: %v", t.Name(), err)
+	}
+	defer fp.Close()
+	// In the same vain, we decide the compressor based on extension. There is
+	// no reason to allocate a beefy block of memory for a decompressor to every
+	// instance...just to support unit tests.
+	var reader *tar.Reader
+	if strings.HasSuffix(t.file.Name(), FormatTGZ) || strings.HasSuffix(t.file.Name(), FormatTarGz) {
+		filter, err := gzip.NewReader(fp)
+		if err != nil {
+			return fmt.Errorf("gzip.NewReader failed: %v", err)
+		}
+		reader = tar.NewReader(filter)
+	} else {
+		reader = tar.NewReader(fp)
+	}
+	for {
+		header, err := reader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("reader.Next() failed: %v", err)
+		}
+		path := filepath.Join(where, header.Name)
+		// Sanitize the file name to prevent zip slip style overwrites.
+		if !strings.HasPrefix(path, filepath.Clean(where)+string(os.PathSeparator)) {
+			return fmt.Errorf("invalid file path: %s", path)
+		}
+		Debugf("Extracting %q -> %q", header.Name, path)
+		stat := header.FileInfo()
+		if stat.IsDir() {
+			if err = os.MkdirAll(path, stat.Mode()); err != nil {
+				return fmt.Errorf("extracting directory %q failed: %v", path, err)
+			}
+			continue
+		}
+		// Since we're not a general purpose extraction tool, this shouldn't be a problem.
+		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+			return fmt.Errorf("os.MkdrDir(%q) failed: %v", filepath.Dir(path), err)
+		}
+		dst, err := os.Create(path)
+		if err != nil {
+			return fmt.Errorf("os.Create(%q) failed: %v", path, err)
+		}
+		defer dst.Close()
+		if err = CopyData(dst, path, reader, header.Name); err != nil {
+			return err
+		}
 	}
 	return nil
 }
