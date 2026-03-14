@@ -35,7 +35,7 @@ func main() {
 // Executes the backup specification using the provided context. Returns nil
 // once the job is complete, or an error is the operation failed.
 func backup(ctx context.Context, spec BackupSpec) error {
-	archive, err := CreateArchive(spec.Path, spec.Format)
+	archive, err := CreateArchive(os.ExpandEnv(spec.Path), spec.Format)
 	if err != nil {
 		return err
 	}
@@ -45,6 +45,7 @@ func backup(ctx context.Context, spec BackupSpec) error {
 		if err = ctx.Err(); err != nil {
 			return err
 		}
+		fn = os.ExpandEnv(fn)
 		stat, err := os.Stat(fn)
 		if err != nil {
 			Warningf("Skipping %s: %v", fn, err)

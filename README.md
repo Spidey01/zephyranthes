@@ -77,3 +77,10 @@ The `format` field can be one of the specified values:
 | "tar"     | TAR archive         |
 | "tgz"     | Gzip compressed TAR |
 | "tar.gz"  | Alias for tgz       |
+
+### Environment Variable Expansion
+
+The `path` field and elements of the `contents` array support expanding
+environment variables. Both `"$evname"` and `"${evname}"` may be used to expand
+the "evname" environment variable. For example, using `$HOME` or `$USER` on Unix
+systems.
