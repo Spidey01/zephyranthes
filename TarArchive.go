@@ -51,6 +51,7 @@ func (t *TarArchive) Name() string {
 }
 
 func (t *TarArchive) Close() error {
+	Debugf("Closing Archive %q", t.Name())
 	if err := t.writer.Close(); err != nil {
 		return err
 	}
@@ -66,6 +67,7 @@ func (t *TarArchive) Close() error {
 }
 
 func (t *TarArchive) Flush() error {
+	Debugf("Flushing Archive %q", t.Name())
 	return t.writer.Flush()
 }
 

@@ -35,6 +35,7 @@ func (z *ZipArchive) Name() string {
 }
 
 func (z *ZipArchive) Close() error {
+	Debugf("Closing Archive %q", z.Name())
 	if err := z.writer.Close(); err != nil {
 		return err
 	}
@@ -45,6 +46,7 @@ func (z *ZipArchive) Close() error {
 }
 
 func (z *ZipArchive) Flush() error {
+	Debugf("Flushing Archive %q", z.Name())
 	return z.writer.Flush()
 }
 
