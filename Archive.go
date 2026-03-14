@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Zlib
-// Copyright 2024, Terry M. Poulin.
+// Copyright 2024-2026, Terry M. Poulin.
 
 package main
 
@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"slices"
 )
 
 type Archive interface {
@@ -37,6 +38,14 @@ type Archive interface {
 
 // Factory function returning the correct Archive implementation for format.
 func CreateArchive(name, format string) (Archive, error) {
+	if options.DryRun {
+		validFormats := []string{FormatTar, FormatTGZ, FormatTarGz, FormatZip}
+		if !slices.Contains(validFormats, format) {
+			return nil, fmt.Errorf("unsupported backup format: %s", format)
+		}
+		Verbosef("Dry run mode enabled: archive is dynamic mockup")
+		return NewDryRunArchive(name), nil
+	}
 	switch format {
 	case FormatTar:
 		return NewTarArchive(name, nil)

@@ -26,7 +26,7 @@ func main() {
 			Verbosef("Running backup %d: %s", i, spec)
 			err = backup(ctx, spec)
 			if err != nil {
-				Fatalf("Backup %s failed: %v", spec.Name, err)
+				Fatalf("Backup %q failed: %v", spec.Name, err)
 			}
 		}
 	}
@@ -73,9 +73,6 @@ func backupFile(archive Archive, stat fs.FileInfo, path string) error {
 		return err
 	}
 	defer fp.Close()
-	if options.DryRun {
-		return nil
-	}
 	return archive.AddFile(fp, stat, path)
 }
 
@@ -99,9 +96,6 @@ func backupDir(archive Archive, root string) error {
 		}
 		if !d.IsDir() {
 			return backupFile(archive, stat, path)
-		}
-		if options.DryRun {
-			return nil
 		}
 		return archive.AddDir(d, stat, path)
 	}
