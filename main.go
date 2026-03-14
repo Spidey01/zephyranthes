@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Zlib
-// Copyright 2024-2025, Terry M. Poulin.
+// Copyright 2024-2026, Terry M. Poulin.
 package main
 
 import (
