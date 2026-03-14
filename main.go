@@ -12,8 +12,10 @@ import (
 var options = NewOptions()
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	options.MustParseArgs()
-	SetupLogging(options.Name(), options.LogLevel, options.LogFile)
+	SetupLogging(ctx, options.Name(), options.LogLevel, options.LogFile)
 	for _, arg := range options.Args() {
 		Verbosef("Parsing %s", arg)
 		specs, err := BackupSpecsFromFile(arg)
@@ -22,7 +24,7 @@ func main() {
 		}
 		for i, spec := range specs {
 			Verbosef("Running backup %d: %s", i, spec)
-			err = backup(context.Background(), spec)
+			err = backup(ctx, spec)
 			if err != nil {
 				Fatalf("Backup %s failed: %v", spec.Name, err)
 			}

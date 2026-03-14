@@ -66,7 +66,7 @@ func ParseLogLevel(arg string) (ll LogLevel, err error) {
 }
 
 // Initializes the log level and sets up a logger for the specified file.
-func SetupLogging(prefix string, level LogLevel, logFile string) error {
+func SetupLogging(ctx context.Context, prefix string, level LogLevel, logFile string) error {
 	logPrefix = prefix
 	logLevel = level
 	flags := log.LstdFlags | log.Lmsgprefix
@@ -78,7 +78,7 @@ func SetupLogging(prefix string, level LogLevel, logFile string) error {
 			return err
 		}
 		logger = log.New(fp, logPrefix+" ", log.LstdFlags|log.Lmsgprefix)
-		context.AfterFunc(context.Background(), func() { fp.Close() })
+		context.AfterFunc(ctx, func() { fp.Close() })
 	}
 	return nil
 }
