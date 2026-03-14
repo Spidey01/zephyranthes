@@ -46,10 +46,12 @@ func NewTarArchive(path string, filter FilterFunc) (*TarArchive, error) {
 	}, nil
 }
 
+// Implements [Archive.Name] for tape archives.
 func (t *TarArchive) Name() string {
 	return t.file.Name()
 }
 
+// Implements [Archive.Close] for tape archives.
 func (t *TarArchive) Close() error {
 	Debugf("Closing Archive %q", t.Name())
 	if err := t.writer.Close(); err != nil {
@@ -66,18 +68,20 @@ func (t *TarArchive) Close() error {
 	return nil
 }
 
+// Implements [Archive.Flush] for tape archives.
 func (t *TarArchive) Flush() error {
 	Debugf("Flushing Archive %q", t.Name())
 	return t.writer.Flush()
 }
 
+// Implements [Archive.AddFS] for tape archives.
 func (t *TarArchive) AddFS(fsys fs.FS) error {
 	return t.writer.AddFS(fsys)
 }
 
 // Creates the best possible header from the stat info, and records the file as
 // `name` in the header.
-func NewTarHeader(stat fs.FileInfo, name string) (*tar.Header, error) {
+func newTarHeader(stat fs.FileInfo, name string) (*tar.Header, error) {
 	var err error
 
 	// Since the Name() method on file/direntry/fileinfo structures typically
@@ -121,9 +125,10 @@ func (t *TarArchive) writeHeader(hdr *tar.Header) error {
 	return nil
 }
 
+// Implements [Archive.AddFile] for tape archives.
 func (t *TarArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) error {
 	Debugf("AddFile(): stat.Name(): %q name: %q", stat.Name(), name)
-	hdr, err := NewTarHeader(stat, name)
+	hdr, err := newTarHeader(stat, name)
 	if err != nil {
 		return err
 	}
@@ -133,9 +138,10 @@ func (t *TarArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) error 
 	return CopyData(t.writer, FormatName(t, name), fp, name)
 }
 
+// Implements [Archive.AddDir] for tape archives.
 func (t *TarArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error {
 	Debugf("AddDirEntry(): stat.Name(): %q name: %q", stat.Name(), name)
-	hdr, err := NewTarHeader(stat, name)
+	hdr, err := newTarHeader(stat, name)
 	if err != nil {
 		return err
 	}

@@ -30,10 +30,12 @@ func NewZipArchive(path string) (*ZipArchive, error) {
 	}, nil
 }
 
+// Implements [Archive.Name] for ZIP archives.
 func (z *ZipArchive) Name() string {
 	return z.file.Name()
 }
 
+// Implements [Archive.Close] for ZIP archives.
 func (z *ZipArchive) Close() error {
 	Debugf("Closing Archive %q", z.Name())
 	if err := z.writer.Close(); err != nil {
@@ -45,11 +47,13 @@ func (z *ZipArchive) Close() error {
 	return nil
 }
 
+// Implements [Archive.Flush] for ZIP archives.
 func (z *ZipArchive) Flush() error {
 	Debugf("Flushing Archive %q", z.Name())
 	return z.writer.Flush()
 }
 
+// Implements [Archive.AddFS] for ZIP archives.
 func (z *ZipArchive) AddFS(fsys fs.FS) error {
 	return z.writer.AddFS(fsys)
 }
@@ -58,7 +62,7 @@ func (z *ZipArchive) AddFS(fsys fs.FS) error {
 // zip.Writer.Create() on the path instead of providing a real file header,
 // default constructs most field, which in turn leads to loss of info like the
 // timestamps.
-func NewZipHeader(stat fs.FileInfo, name string) (*zip.FileHeader, error) {
+func newZipHeader(stat fs.FileInfo, name string) (*zip.FileHeader, error) {
 	// Info-Zip and a few others have a means of storing Unix symbolic links in
 	// the archive, but I'm not familiar with this extension, and Go's
 	// implementation doesn't seem to support it.
@@ -83,9 +87,10 @@ func NewZipHeader(stat fs.FileInfo, name string) (*zip.FileHeader, error) {
 	return hdr, nil
 }
 
+// Implements [Archive.AddFile] for ZIP archives.
 func (z *ZipArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) error {
 	Debugf("AddFile(): stat.Name(): %q name: %q", stat.Name(), name)
-	hdr, err := NewZipHeader(stat, name)
+	hdr, err := newZipHeader(stat, name)
 	if err != nil {
 		return err
 	}
@@ -96,13 +101,14 @@ func (z *ZipArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) error 
 	return CopyData(w, FormatName(z, name), fp, name)
 }
 
+// Implements [Archive.AddDir] for ZIP archives.
 func (z *ZipArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error {
 	Debugf("AddDirEntry(): stat.Name(): %q name: %q", stat.Name(), name)
 	path := name
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
-	hdr, err := NewZipHeader(stat, path)
+	hdr, err := newZipHeader(stat, path)
 	if err != nil {
 		return err
 	}
