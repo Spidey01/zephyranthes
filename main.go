@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"runtime/debug"
 )
 
 var options = NewOptions()
@@ -15,6 +16,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	options.MustParseArgs()
+	if options.Version {
+		printVersionInfo()
+		os.Exit(0)
+	}
 	SetupLogging(ctx, options.Name(), options.LogLevel, options.LogFile)
 	for _, arg := range options.Args() {
 		Verbosef("Parsing %s", arg)
@@ -30,6 +35,14 @@ func main() {
 			}
 		}
 	}
+}
+
+func printVersionInfo() {
+	version := "unknown"
+	if buildInfo, ok := debug.ReadBuildInfo(); ok {
+		version = buildInfo.Main.Version
+	}
+	fmt.Println("Zephyranthes version", version)
 }
 
 // Executes the backup specification using the provided context. Returns nil

@@ -51,6 +51,15 @@ func TestOptions(t *testing.T) {
 			assertOptionsFlag(t, &opts.Verbose, expected, args)
 		}
 	})
+	t.Run("version", func(t *testing.T) {
+		version := map[string]bool{"-version": true, "--version": true, "": false, "-v": false}
+		for arg, expected := range version {
+			opts.Version = false
+			args := []string{arg}
+			assertOptionsParse(t, opts, args)
+			assertOptionsFlag(t, &opts.Version, expected, args)
+		}
+	})
 	t.Run("dry-run", func(t *testing.T) {
 		dryRun := map[string]bool{"-dry-run": true, "--dry-run": true, "": false, "-v": false}
 		for arg, expected := range dryRun {

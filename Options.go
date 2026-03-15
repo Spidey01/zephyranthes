@@ -12,18 +12,20 @@ import (
 )
 
 type Options struct {
-	// Verbose output.
-	Verbose bool
-	// Display help output.
-	Help bool
 	// Log details to this path.
 	LogFile string
 	// How verbose to make the log.
 	LogLevel LogLevel
-	// Perform a dry run.
-	DryRun bool
 	// Flag set for parsing the above options.
 	FlagSet *flag.FlagSet
+	// Perform a dry run.
+	DryRun bool
+	// Verbose output.
+	Verbose bool
+	// Display help output.
+	Help bool
+	// Just print version.
+	Version bool
 }
 
 // Returns a new Options set to defaults. Call one of the parse functions to
@@ -35,6 +37,7 @@ func NewOptions() *Options {
 	fs.BoolVar(&opts.Help, "help", false, "Show usage.")
 	fs.BoolVar(&opts.Verbose, "v", false, "Produce verbose output.")
 	fs.BoolVar(&opts.Verbose, "verbose", false, "Produce verbose output.")
+	fs.BoolVar(&opts.Version, "version", false, "Show version info and exit.")
 	fs.StringVar(&opts.LogFile, "log-file", "", "Log what we're doing to the specified FILE.")
 	fs.Func("log-level", "How verbose the log file is. One of: fatal, error, warning, info, verbose, debug", func(arg string) error {
 		var err error
