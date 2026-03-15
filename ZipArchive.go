@@ -65,19 +65,20 @@ func (z *ZipArchive) AddFS(fsys fs.FS) error {
 // timestamps.
 func newZipHeader(stat fs.FileInfo, name string) (*zip.FileHeader, error) {
 	// Info-Zip and a few others have a means of storing Unix symbolic links in
-	// the archive, but I'm not familiar with this extension, and Go's
-	// implementation doesn't seem to support it.
+	// the archive, but I'm not familiar with this extension. It relies on using
+	// the ExternalAttributes to set  the S_IFLNK file type flag.
+	//
+	// Go's zip implementation supports this if you provide the lstat to
+	// zip.FileInfoHeader and ensure the target is written as the file contents.
 	if stat.Mode().Type()&fs.ModeSymlink != 0 {
-		linkDestination, err := os.Readlink(name)
-		if err != nil {
-			Errorf("reading symlink %q failed: %v", name, err)
-			linkDestination = ""
+		Debugf("name %q is a symlink", name)
+		var err error
+		if stat, err = os.Lstat(name); err != nil {
+			return nil, fmt.Errorf("os.Lstat(%q) failed: %v", name, err)
 		}
-		Warningf("Archive member %q refers to a symlink to %q and will be stored as that file's contents rather than as a symbolic link.",
-			name, linkDestination)
-		Verbosef("To work around this ")
 	}
-	// This handles setting the fields related to uncompressed size and timestamps.
+	// This handles setting the fields related to uncompressed size, timestamps,
+	// and external attributes.
 	hdr, err := zip.FileInfoHeader(stat)
 	if err != nil {
 		return nil, err
@@ -99,6 +100,22 @@ func (z *ZipArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) error 
 	if err != nil {
 		return err
 	}
+	if stat.Mode().Type()&fs.ModeSymlink != 0 {
+		// For symlinks to a file, we have to write the links target rather than
+		// the file contents.
+		target, err := os.Readlink(name)
+		if err != nil {
+			return fmt.Errorf("reading symlink %q failed: %v", name, err)
+		}
+		Debugf("Read link %q, target is %q", name, target)
+		value := []byte(target)
+		if nb, err := w.Write(value); err != nil {
+			return fmt.Errorf("failed writing symlink %q target %q to archive: %v", name, target, err)
+		} else if nb < len(value) {
+			return fmt.Errorf("failed writing symlink %q target %q to archive: wrote %d/%d target bytes", name, target, nb, len(value))
+		}
+		return nil
+	}
 	return CopyData(w, FormatName(z, name), fp, name)
 }
 
@@ -114,6 +131,7 @@ func (z *ZipArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) error
 		return err
 	}
 	// We ignore the returned writer as there are no file contents for a directory.
+	// For symlinks, the details are already in the header.
 	_, err = z.writer.CreateHeader(hdr)
 	if err != nil {
 		return err

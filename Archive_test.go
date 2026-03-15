@@ -138,7 +138,7 @@ func MkfileTestInput(t *testing.T, path, name string, contents []byte) TestInput
 // exists. Actually verifying in check(), not so much since not all formats
 // support storing symlinks.
 func MklinkTestInput(t *testing.T, oldpath, newpath, name string) TestInput {
-	if err := os.Link(oldpath, newpath); err != nil {
+	if err := os.Symlink(oldpath, newpath); err != nil {
 		t.Errorf("MklinkTestInput(...): os.Link(%q, %q): failed: %v", oldpath, newpath, err)
 	}
 	fp, err := os.Open(newpath)
