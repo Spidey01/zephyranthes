@@ -137,18 +137,34 @@ func TestBackupDir(t *testing.T) {
 	var nFilesFound int
 	var nDirsFound int
 	for _, path := range archive.contents {
+		// symlinks are stored as files, but the TestInput has to record it as a
+		// directory for other test purposes. Thus, it becomes a special case
+		// here.
 		if strings.HasSuffix(path, "/") {
 			nDirsFound++
+			t.Logf("actual input dir: %v", path)
 		} else {
+			t.Logf("actual input file: %v", path)
 			nFilesFound++
 		}
 	}
 	var nExpectedFiles int
 	var nExpectedDirs int
 	for _, input := range inputs {
-		if input.DirEntry == nil {
+		// We also have to consider dirlinkup in the fixture. For the purposes
+		// of backupDir this is a file (symlink), but the TestInput has to
+		// record it as a DirEntry for other purposes. Since this is the only
+		// case that cares that directory symlinks are stored as files, we
+		// special case it in this test. It's not worth handling more generally
+		// when it's the only one.
+		if strings.HasSuffix(input.Name, "dirlinkup") {
+			t.Logf("expected input link: %v", input.Name)
+			nExpectedFiles++
+		} else if input.DirEntry == nil {
+			t.Logf("expected input file: %v", input.Name)
 			nExpectedFiles++
 		} else {
+			t.Logf("expected input dir: %v", input.Name)
 			nExpectedDirs++
 		}
 	}
@@ -156,7 +172,7 @@ func TestBackupDir(t *testing.T) {
 		t.Errorf("Expected %d files archived, but %d files archived", nFilesFound, nExpectedFiles)
 	}
 	if nDirsFound != nExpectedDirs {
-		t.Errorf("Expected %d files archived, but %d files archived", nDirsFound, nExpectedDirs)
+		t.Errorf("Expected %d directories archived, but %d directories archived", nDirsFound, nExpectedDirs)
 	}
 
 	os.Remove(lfp.Name()) // only clean up log on success.

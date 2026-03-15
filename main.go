@@ -95,6 +95,7 @@ func backupDir(archive Archive, root string) error {
 		if err != nil {
 			return fmt.Errorf("stat %q failed: %w", path, err)
 		}
+		// N.B. this includes symlinks regardless of target.
 		if !d.IsDir() {
 			return backupFile(archive, stat, path)
 		}

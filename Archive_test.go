@@ -73,30 +73,33 @@ type TestInput struct {
 	Contents []byte      // Contains a copy of the file contents when File is non-nil.
 }
 
+func getDirEntry(path string) (fs.DirEntry, error) {
+	prefix := filepath.Dir(path)
+	base := filepath.Base(path)
+	dirEntries, err := os.ReadDir(prefix)
+	if err != nil {
+		return nil, fmt.Errorf("os.ReadDir(%q) failed: %v", prefix, err)
+	}
+	for _, dirEntry := range dirEntries {
+		if dirEntry.IsDir() && dirEntry.Name() == base {
+			return dirEntry, nil
+		}
+	}
+	return nil, fmt.Errorf("no fs.DirEntry found for %q", path)
+}
+
 // Creates the specified directory and returns a TestInput for it.
 func MkdirTestInput(t *testing.T, path, name string) TestInput {
 	if err := os.Mkdir(path, 0755); err != nil {
 		t.Fatalf("MkdirTestInput(...): os.Mkdir(%q): failed: %v", path, err)
 	}
-	prefix := filepath.Dir(path)
-	base := filepath.Base(path)
-	dirEntries, err := os.ReadDir(prefix)
+	dirEntry, err := getDirEntry(path)
 	if err != nil {
-		t.Fatalf("MakeTestInputDir(...): os.ReadDir(%q) failed: %v", prefix, err)
+		t.Fatalf("getDirEntry(%q) failed: %v", path, err)
 	}
-	var dirEntry fs.DirEntry
-	var stat fs.FileInfo
-	for _, dirEntry = range dirEntries { // N.B. the lack of := is intentional!
-		if dirEntry.IsDir() && dirEntry.Name() == base {
-			stat, err = dirEntry.Info()
-			if err != nil {
-				t.Fatalf("MkdirTestInput(...): dirEntry.Info() failed: %v", err)
-			}
-			break
-		}
-	}
-	if dirEntry == nil || stat == nil {
-		t.Fatalf("MkdirTestInput(...): couldn't find the fs.DirEntry for %q", path)
+	stat, err := dirEntry.Info()
+	if err != nil {
+		t.Fatalf("MkdirTestInput(...): dirEntry.Info() failed: %v", err)
 	}
 	return TestInput{
 		Path:     path,
@@ -149,11 +152,29 @@ func MklinkTestInput(t *testing.T, oldpath, newpath, name string) TestInput {
 	if err != nil {
 		t.Fatalf("MklinkTestInput(...): fp.Stat() failed: %v", err)
 	}
+	if !stat.IsDir() {
+		return TestInput{
+			Path: newpath,
+			Name: name,
+			File: fp,
+			Stat: stat,
+		}
+	}
+	// then need to make a directory style TestInput
+	fp.Close()
+	dirEntry, err := getDirEntry(oldpath)
+	if err != nil {
+		t.Fatalf("MklinkTestInput(...): getDirEntry(%q) failed: %v", oldpath, err)
+	}
+	stat, err = dirEntry.Info()
+	if err != nil {
+		t.Fatalf("MklinkTestInput(...): dirEntry.Info() failed: %v", err)
+	}
 	return TestInput{
-		Path: newpath,
-		Name: name,
-		File: fp,
-		Stat: stat,
+		Path:     newpath,
+		Name:     name,
+		DirEntry: dirEntry,
+		Stat:     stat,
 	}
 }
 
@@ -217,7 +238,8 @@ func MakeTestData(t *testing.T, root string) []TestInput {
 	contents = append(contents, file)
 
 	linkup := MklinkTestInput(t, zeros.Path, filepath.Join(subdir.Path, "linkup"), filepath.Join(subdir.Name, "linkup"))
-	contents = append(contents, linkup)
+	dirlinkup := MklinkTestInput(t, subdir.Path, filepath.Join(subdir.Path, "dirlinkup"), filepath.Join(subdir.Name, "dirlinkup"))
+	contents = append(contents, linkup, dirlinkup)
 
 	return contents
 }
