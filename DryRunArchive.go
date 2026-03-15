@@ -52,6 +52,10 @@ func (dry *DryRunArchive) AddFile(fp io.Reader, stat fs.FileInfo, name string) e
 	if dry.err != nil {
 		return dry.err
 	}
+	if stat.IsDir() {
+		// real implementations error here due to the archive format.
+		return fmt.Errorf("cannot add directory %q as file", name)
+	}
 	dry.contents = append(dry.contents, name)
 	return nil
 }
@@ -61,7 +65,13 @@ func (dry *DryRunArchive) AddDir(dp fs.DirEntry, stat fs.FileInfo, name string) 
 	if dry.err != nil {
 		return dry.err
 	}
+	if !stat.IsDir() {
+		// real implementations error here due to the archive format.
+		return fmt.Errorf("cannot add file %q as directory", name)
+	}
 	path := name
+	// ZipArchive uses this convention, we use it here because it makes it
+	// obvious without having to save the fs.FileInfo.
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
