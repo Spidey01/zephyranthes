@@ -69,6 +69,15 @@ func TestOptions(t *testing.T) {
 			assertOptionsFlag(t, &opts.DryRun, expected, args)
 		}
 	})
+	t.Run("directory", func(t *testing.T) {
+		chdir := map[string]string{"--directory": "/", "-C": "/", "--dry-run": "", "": ""}
+		for arg, expected := range chdir {
+			opts.Directory = ""
+			args := []string{arg, expected}
+			assertOptionsParse(t, opts, args)
+			assertOptionsFlag(t, &opts.Directory, expected, args)
+		}
+	})
 	t.Run("log-file", func(t *testing.T) {
 		logFile := map[string]string{"-log-file": "foo", "--log-file": "bar", "--dry-run": "", "": ""}
 		for arg, expected := range logFile {

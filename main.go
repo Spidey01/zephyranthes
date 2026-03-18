@@ -21,6 +21,12 @@ func main() {
 		os.Exit(0)
 	}
 	SetupLogging(ctx, options.Name(), options.LogLevel, options.LogFile)
+	if options.Directory != "" {
+		if err := os.Chdir(options.Directory); err != nil {
+			Fatalf("Changing directory to %q failed: %v", options.Directory, err)
+		}
+		Verbosef("Changed directory to %q", options.Directory)
+	}
 	for _, arg := range options.Args() {
 		Verbosef("Parsing %s", arg)
 		specs, err := BackupSpecsFromFile(arg)
