@@ -43,7 +43,7 @@ func assertBackupSpecs(t *testing.T, actual, expected []BackupSpec) bool {
 
 func TestUnmarshalBackupSpecs(t *testing.T) {
 	assert := func(t *testing.T, expected []BackupSpec, marshaler func(any) ([]byte, error)) {
-		data, err := json.MarshalIndent(expected, "", "    ")
+		data, err := marshaler(expected)
 		if err != nil {
 			t.Fatalf("marshaling failed: %v", err)
 		}
