@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
-## [Unreleased] - WIP
+## [v1.2.0] - 2026-03-21
+
+This release introduces support for several new flags, most notably a tar like
+`-C DIR` flag that can be helpful in cron jobs. Support for `zstd` compression
+is added to tar archives using the
+[github.com/klauspost/compress](https://github.com/klauspost/compress) package.
 
 ### Added
 
@@ -17,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `--man` option to display a manual page.
 - New `--about` flag to display copyright and license info.
 - Added new `tzst` and `tar.zst` format values for using zstd compression.
+
+### Changed
+
+- CHANGELOG now links to GitHub's branch comparison rather than commits since view.
 
 ## [v1.1.0] - 2026-03-15
 
@@ -46,6 +55,7 @@ released :).
 
 ---
 
-- \[unreleased\]: [changes](https://github.com/Spidey01/zephyranthes/compare/v1.1.0...HEAD)
-- [[1.1.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.1.0)]: [commits](https://github.com/Spidey01/zephyranthes/commits/v1.1.0/)
+- \[unreleased\]: [changes](https://github.com/Spidey01/zephyranthes/compare/v1.2.0...HEAD)
+- [[1.2.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.2.0)]: [Full Changelog](https://github.com/Spidey01/zephyranthes/compare/v1.1.0...v1.2.0)
+- [[1.1.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.1.0)]: [Full Changelog](https://github.com/Spidey01/zephyranthes/compare/v1.0.0...v1.1.0)
 - [[1.0.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.0.0)]: [commits](https://github.com/Spidey01/zephyranthes/commits/v1.0.0/)
