@@ -42,6 +42,7 @@ Each backup specification object contains the following fields:
   - **zip**: archive will be formatted as ZIP.
   - **tar**: plain tape archive (`.tar`) file.
   - **tgz**, **tar.gz**: tape archive compressed with [**gzip**(1)](man(gzip))
+  - **tzst**, **tar.zst**: tape archive compressed with [**zstd**(1)](man(zstd))
 - **contents**: list of files to backup in the archive.
 
 These "backup spec" objects defines a single archive, and each backup

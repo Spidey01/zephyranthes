@@ -25,10 +25,12 @@ type BackupSpec struct {
 }
 
 const (
-	FormatTGZ   = "tgz"
-	FormatTar   = "tar"
-	FormatTarGz = "tar.gz"
-	FormatZip   = "zip"
+	FormatTGZ    = "tgz"
+	FormatTar    = "tar"
+	FormatTarGz  = "tar.gz"
+	FormatTZST   = "tzst"
+	FormatTarZst = "tar.zst"
+	FormatZip    = "zip"
 )
 
 func UnmarshalBackupSpecs(data []byte) ([]BackupSpec, error) {

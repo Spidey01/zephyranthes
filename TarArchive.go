@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 type TarArchive struct {
@@ -171,6 +173,12 @@ func (t *TarArchive) ExtractTo(where string) error {
 		filter, err := gzip.NewReader(fp)
 		if err != nil {
 			return fmt.Errorf("gzip.NewReader failed: %v", err)
+		}
+		reader = tar.NewReader(filter)
+	} else if strings.HasSuffix(t.file.Name(), FormatTZST) || strings.HasSuffix(t.file.Name(), FormatTarZst) {
+		filter, err := zstd.NewReader(fp)
+		if err != nil {
+			return fmt.Errorf("zstd.NewReader failed: %v", err)
 		}
 		reader = tar.NewReader(filter)
 	} else {

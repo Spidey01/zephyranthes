@@ -9,6 +9,8 @@ import (
 	"io"
 	"io/fs"
 	"slices"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 type Archive interface {
@@ -51,6 +53,15 @@ func CreateArchive(name, format string) (Archive, error) {
 		return NewTarArchive(name, nil)
 	case FormatTGZ, FormatTarGz:
 		filter := func(w io.Writer) io.WriteCloser { return gzip.NewWriter(w) }
+		return NewTarArchive(name, filter)
+	case FormatTZST, FormatTarZst:
+		filter := func(w io.Writer) io.WriteCloser {
+			encoder, err := zstd.NewWriter(w)
+			if err != nil {
+				Fatalf("zstd.NewWriter failed: %v", err)
+			}
+			return encoder
+		}
 		return NewTarArchive(name, filter)
 	case FormatZip:
 		return NewZipArchive(name)

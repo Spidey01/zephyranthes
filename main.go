@@ -19,6 +19,9 @@ var manual string
 //go:embed LICENSE.txt
 var license string
 
+//go:embed 3rd_party_licenses.txt
+var third_party_licenses string
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

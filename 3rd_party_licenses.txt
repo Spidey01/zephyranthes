@@ -1,0 +1,5 @@
+This project uses several Open Source Go modules. Each is listed below as a link
+to the respective project's license file.
+
+[gopkg.in/yaml.v3](https://github.com/go-yaml/yaml/blob/v3.0.1/LICENSE)
+[github.com/klauspost/compress](https://github.com/klauspost/compress/blob/v1.18.5/LICENSE)

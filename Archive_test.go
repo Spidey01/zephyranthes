@@ -319,4 +319,8 @@ func TestArchive(t *testing.T) {
 		assertArchive(t, FormatTarGz)
 		assertArchive(t, FormatTGZ)
 	})
+	t.Run("tzst", func(t *testing.T) {
+		assertArchive(t, FormatTarZst)
+		assertArchive(t, FormatTZST)
+	})
 }

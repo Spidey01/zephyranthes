@@ -2,4 +2,7 @@ module github.com/Spidey01/zephyr
 
 go 1.26.1
 
-require gopkg.in/yaml.v3 v3.0.1 // indirect
+require (
+	github.com/klauspost/compress v1.18.5
+	gopkg.in/yaml.v3 v3.0.1
+)
