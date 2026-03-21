@@ -9,11 +9,15 @@ an archive is generated.
 ## Usage
 
 ```sh
-zephyr -h
+zephyr --help
 usage: zephyr [options] [file ...]
 
 Options:
 
+  -C string
+        Alias for --directory.
+  -directory string
+        Change directory before opening and running the backup specs.
   -dry-run
     
   -h    Show usage.
@@ -23,53 +27,22 @@ Options:
         Log what we're doing to the specified FILE.
   -log-level value
         How verbose the log file is. One of: fatal, error, warning, info, verbose, debug
+  -man
+        Show manual page
   -v    Produce verbose output.
   -verbose
         Produce verbose output.
+  -version
+        Show version info and exit.
 
 Each file is parsed to define the backup archive(s) to create. Defaults to reading from standard input.
 ```
 
-## Backup Specs
+For more information, see the [man page](zephyr.1.md).
 
-Backups may be defined in either YAML or JSON format. The file is a list of
-backup specifications that define the archives to be created, and what its
-contents are. Each backup specification defines one archive, and a file may
-define one or more backup specifications.
+## Archive Formats
 
-The following YAML defines a zip archive named "backup.zip" to be created in the
-system's root directory, containing the contents of two system directories.
-
-```yaml
-- name: Name of the backup
-  path: /backup.zip
-  format: zip
-  contents:
-    - /etc
-    - /usr/local/etc
-```
-
-The following JSON defines the same thing, except as an uncompressed tape archive.
-
-```json
-[
-    "backups": [
-        {
-            "name": "Name of the backup",
-            "path": "/backup.tar",
-            "format": "tar",
-            "contents": [
-                "/etc",
-                "/usr/local/etc"
-            ]
-        }
-    ]
-]
-```
-
-### Formats
-
-The `format` field can be one of the specified values:
+Zephyranthes can create archives in the specified formats.
 
 | Value     | Output format       |
 | --------- | ------------------- |
@@ -78,9 +51,20 @@ The `format` field can be one of the specified values:
 | "tgz"     | Gzip compressed TAR |
 | "tar.gz"  | Alias for tgz       |
 
-### Environment Variable Expansion
+## Installation
 
-The `path` field and elements of the `contents` array support expanding
-environment variables. Both `"$evname"` and `"${evname}"` may be used to expand
-the "evname" environment variable. For example, using `$HOME` or `$USER` on Unix
-systems.
+For a system that has `GOBIN` in `PATH`, simply run
+
+```sh
+go install
+```
+
+The executable can also be compiled and then copied into `PATH` as you see fit.
+
+```sh
+go build -o zephyr
+```
+
+If you need to cross-compile for another operating system or machine
+architecture, set the `GOOS` and `GOARCH` environment variables before
+compiling. See `go tool dist list` for a list of combinations.

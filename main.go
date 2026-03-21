@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,12 +13,19 @@ import (
 
 var options = NewOptions()
 
+//go:embed zephyr.md
+var manual string
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	options.MustParseArgs()
 	if options.Version {
 		printVersionInfo()
+		os.Exit(0)
+	}
+	if options.ManPage {
+		fmt.Println(manual)
 		os.Exit(0)
 	}
 	SetupLogging(ctx, options.Name(), options.LogLevel, options.LogFile)

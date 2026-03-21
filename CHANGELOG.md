@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `-C DIR` / `--directory DIR` option to change to `DIR` before opening and running backup specs.
   - Since `contents` are resolved relative to the current directory, this can be
     used to control how files are resolved or avoid storing the full path.
+- Add `--man` option to display a manual page.
 
 ## [v1.1.0] - 2026-03-15
 

@@ -26,6 +26,8 @@ type Options struct {
 	Verbose bool
 	// Display help output.
 	Help bool
+	// Display the manual page.
+	ManPage bool
 	// Just print version.
 	Version bool
 }
@@ -40,6 +42,7 @@ func NewOptions() *Options {
 	fs.BoolVar(&opts.Verbose, "v", false, "Produce verbose output.")
 	fs.BoolVar(&opts.Verbose, "verbose", false, "Produce verbose output.")
 	fs.BoolVar(&opts.Version, "version", false, "Show version info and exit.")
+	fs.BoolVar(&opts.ManPage, "man", false, "Show manual page")
 	fs.StringVar(&opts.Directory, "directory", "", "Change directory before opening and running the backup specs.")
 	fs.StringVar(&opts.Directory, "C", "", "Alias for --directory.")
 	fs.StringVar(&opts.LogFile, "log-file", "", "Log what we're doing to the specified FILE.")
