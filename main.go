@@ -13,7 +13,7 @@ import (
 
 var options = NewOptions()
 
-//go:embed zephyr.md
+//go:embed zephyr.1.md
 var manual string
 
 func main() {
