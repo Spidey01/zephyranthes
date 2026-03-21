@@ -16,16 +16,14 @@ var options = NewOptions()
 //go:embed zephyr.1.md
 var manual string
 
+//go:embed LICENSE.txt
+var license string
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	options.MustParseArgs()
-	if options.Version {
-		printVersionInfo()
-		os.Exit(0)
-	}
-	if options.ManPage {
-		fmt.Println(manual)
+	if printInfoFlags() {
 		os.Exit(0)
 	}
 	SetupLogging(ctx, options.Name(), options.LogLevel, options.LogFile)
@@ -48,6 +46,27 @@ func main() {
 				Fatalf("Backup %q failed: %v", spec.Name, err)
 			}
 		}
+	}
+}
+
+// Handles various flags that result in a print and exit operation.
+// - version info
+// - man page
+// - copyright and license info.
+func printInfoFlags() bool {
+	switch {
+	case options.Version:
+		printVersionInfo()
+		return true
+	case options.ManPage:
+		fmt.Println(manual)
+		return true
+	case options.About:
+		fmt.Println(license)
+		fmt.Println(third_party_licenses)
+		return true
+	default:
+		return false
 	}
 }
 

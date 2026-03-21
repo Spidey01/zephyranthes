@@ -60,6 +60,15 @@ func TestOptions(t *testing.T) {
 			assertOptionsFlag(t, &opts.Version, expected, args)
 		}
 	})
+	t.Run("about", func(t *testing.T) {
+		version := map[string]bool{"-about": true, "--about": true, "": false, "-v": false}
+		for arg, expected := range version {
+			opts.About = false
+			args := []string{arg}
+			assertOptionsParse(t, opts, args)
+			assertOptionsFlag(t, &opts.About, expected, args)
+		}
+	})
 	t.Run("man", func(t *testing.T) {
 		version := map[string]bool{"-man": true, "--man": true, "": false, "-v": false}
 		for arg, expected := range version {

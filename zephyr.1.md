@@ -16,6 +16,7 @@ defined, an archive is generated.
 
 - **-C DIR**, **--directory DIR**: Change directory before opening and running
   the backup specs.
+- **--about**: Show copyright and license information about the program.
 - **--dry-run**: Don't actually create an archive.
 - **-h**, **--help**: Show usage summary.
 - **--log-file FILE**: Log what we're doing to the specified **FILE**.

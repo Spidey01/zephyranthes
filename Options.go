@@ -30,6 +30,8 @@ type Options struct {
 	ManPage bool
 	// Just print version.
 	Version bool
+	// Print
+	About bool
 }
 
 // Returns a new Options set to defaults. Call one of the parse functions to
@@ -39,6 +41,7 @@ func NewOptions() *Options {
 	fs := flag.NewFlagSet(opts.Name(), flag.ExitOnError)
 	fs.BoolVar(&opts.Help, "h", false, "Show usage.")
 	fs.BoolVar(&opts.Help, "help", false, "Show usage.")
+	fs.BoolVar(&opts.About, "about", false, "Show copyright and license information about the program.")
 	fs.BoolVar(&opts.Verbose, "v", false, "Produce verbose output.")
 	fs.BoolVar(&opts.Verbose, "verbose", false, "Produce verbose output.")
 	fs.BoolVar(&opts.Version, "version", false, "Show version info and exit.")
