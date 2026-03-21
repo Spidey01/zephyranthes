@@ -5,15 +5,12 @@ package main
 
 import (
 	"archive/tar"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/klauspost/compress/zstd"
 )
 
 type TarArchive struct {
@@ -22,7 +19,7 @@ type TarArchive struct {
 	compressor io.WriteCloser
 }
 
-type FilterFunc func(io.Writer) io.WriteCloser
+type FilterFunc func(io.Writer) (io.WriteCloser, error)
 
 // Creates a new tape archive (tar) at the specified path. If filter is not nil,
 // it will be called with the file handle to create a filter. This can be used
@@ -36,7 +33,9 @@ func NewTarArchive(path string, filter FilterFunc) (*TarArchive, error) {
 	var writer *tar.Writer
 	var compressor io.WriteCloser
 	if filter != nil {
-		compressor = filter(fp)
+		if compressor, err = filter(fp); err != nil {
+			return nil, err
+		}
 		writer = tar.NewWriter(compressor)
 	} else {
 		compressor = nil
@@ -170,17 +169,17 @@ func (t *TarArchive) ExtractTo(where string) error {
 	// instance...just to support unit tests.
 	var reader *tar.Reader
 	if strings.HasSuffix(t.file.Name(), FormatTGZ) || strings.HasSuffix(t.file.Name(), FormatTarGz) {
-		filter, err := gzip.NewReader(fp)
-		if err != nil {
-			return fmt.Errorf("gzip.NewReader failed: %v", err)
+		if filter, err := newGzipReader(fp); err != nil {
+			return err
+		} else {
+			reader = tar.NewReader(filter)
 		}
-		reader = tar.NewReader(filter)
 	} else if strings.HasSuffix(t.file.Name(), FormatTZST) || strings.HasSuffix(t.file.Name(), FormatTarZst) {
-		filter, err := zstd.NewReader(fp)
-		if err != nil {
-			return fmt.Errorf("zstd.NewReader failed: %v", err)
+		if filter, err := newZstdReader(fp); err != nil {
+			return err
+		} else {
+			reader = tar.NewReader(filter)
 		}
-		reader = tar.NewReader(filter)
 	} else {
 		reader = tar.NewReader(fp)
 	}
