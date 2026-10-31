@@ -50,6 +50,8 @@ Zephyranthes can create archives in the specified formats.
 | "tar"     | TAR archive         |
 | "tgz"     | Gzip compressed TAR |
 | "tar.gz"  | Alias for tgz       |
+| "tzst"    | Zstd compressed TAR |
+| "tar.zst" | Alias for tzst      |
 
 ## Installation
 
