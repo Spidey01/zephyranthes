@@ -23,6 +23,7 @@ defined, an archive is generated.
 - **--log-level LEVEL**: How verbose the log file is.
   - One of: **fatal**, **error**, **warning**, **info**, **verbose**, **debug**.
 - **--man**: Show this manual page.
+- **--no-exec**: Do not execute external commands defined in the backup spec.
 - **-v**, **--verbose**: Produce verbose output.
 - **--version**: Show version info and exit.
 
