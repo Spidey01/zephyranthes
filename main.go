@@ -200,7 +200,9 @@ func commands(ctx context.Context, spec CommandSpec) []*exec.Cmd {
 			case name == "":
 				name = elem
 			default:
-				args = append(args, os.Expand(elem, getenv))
+				if a := os.Expand(elem, getenv); a != "" {
+					args = append(args, a)
+				}
 			}
 		}
 		cmd := exec.CommandContext(ctx, name, args...)
