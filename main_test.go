@@ -5,8 +5,10 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Bootstrap options and logging. Returns the file handle for the log file.
@@ -176,4 +178,65 @@ func TestBackupDir(t *testing.T) {
 	}
 
 	os.Remove(lfp.Name()) // only clean up log on success.
+}
+
+func TestCommands(t *testing.T) {
+	spec := CommandSpec{
+		Commands: []string{
+			"multi word command",
+			"another command",
+			"expanded $foo command",
+			"with   spaces",
+			"not $recursive",
+		},
+		Directory: "/override/working/directory",
+		Environment: map[string]string{
+			"foo":       "bar",
+			"recursive": "$foo",
+			"SHELL":     "overriden",
+		},
+		Timeout: 1 * time.Second,
+	}
+	var count int
+	for i, cmd := range commands(t.Context(), spec) {
+		count++
+		if cmd.Dir != spec.Directory {
+			t.Errorf("Index %d: Expected Cmd.Dir %s, got %s", i, cmd.Dir, spec.Directory)
+		}
+		assert := func(expected, actual []string) {
+			t.Helper()
+			if !slices.Equal(actual, expected) {
+				t.Errorf("Index %d: Expected args %+v, but parsed %+v", i, expected, actual)
+			}
+		}
+		switch i {
+		case 0:
+			assert(cmd.Args, []string{"multi", "word", "command"})
+		case 1:
+			assert(cmd.Args, []string{"another", "command"})
+		case 2:
+			assert(cmd.Args, []string{"expanded", "bar", "command"})
+		case 3:
+			for i, a := range cmd.Args {
+				t.Logf("cmd.Args[%d]: %q", i, a)
+			}
+			assert(cmd.Args, []string{"with", "spaces"})
+		case 4:
+			assert(cmd.Args, []string{"not", "$foo"})
+		default:
+			t.Fatalf("Test doesn't have index %d", i)
+		}
+		for key, value := range spec.Environment {
+			env := key + "=" + value
+			if !slices.Contains(cmd.Env, env) {
+				t.Errorf("Index %d: Expected %s in Cmd.Env%+v", i, env, cmd.Env)
+			}
+			if !slices.Contains(cmd.Environ(), env) {
+				t.Errorf("Index %d: Expected %s in Cmd.Environ()%+v", i, env, cmd.Env)
+			}
+		}
+	}
+	if want := len(spec.Commands); count != want {
+		t.Errorf("Expected %d exec.Cmd objects, but %d created", want, count)
+	}
 }
