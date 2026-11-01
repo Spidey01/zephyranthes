@@ -8,7 +8,10 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"runtime/debug"
+	"slices"
+	"strings"
 )
 
 var options = NewOptions()
@@ -44,7 +47,7 @@ func main() {
 		}
 		for i, spec := range specs {
 			Verbosef("Running backup %d: %s", i, spec)
-			err = backup(ctx, spec)
+			err = runBackupSpec(ctx, spec)
 			if err != nil {
 				Fatalf("Backup %q failed: %v", spec.Name, err)
 			}
@@ -79,6 +82,21 @@ func printVersionInfo() {
 		version = buildInfo.Main.Version
 	}
 	fmt.Println("Zephyranthes version", version)
+}
+
+// Handles one backup spec. Ensures the before command hook runs, and provided
+// that suceeds, calls backup() and then always runs the after command hook.
+func runBackupSpec(ctx context.Context, spec BackupSpec) error {
+	Verbosef("Running before commands...")
+	if err := runCommands(ctx, spec.Before); err != nil {
+		return err
+	}
+	backupErr := backup(ctx, spec)
+	Verbosef("Running after commands...")
+	if err := runCommands(ctx, spec.After); err != nil {
+		return err
+	}
+	return backupErr
 }
 
 // Executes the backup specification using the provided context. Returns nil
@@ -151,4 +169,78 @@ func backupDir(archive Archive, root string) error {
 		return archive.AddDir(d, stat, path)
 	}
 	return WalkDir(root, fn)
+}
+
+// commands returns the set of exec.Cmds for the provided spec.
+func commands(ctx context.Context, spec CommandSpec) []*exec.Cmd {
+	// [os.Getenv] doesn't have a varient overriding [os.Environ]. To call
+	// [os.Expand] we need to provide our own that first checks the overrides in
+	// [CommandSpec.Environment] or we need to build/restore our own env.
+	getenv := func(key string) string {
+		if value, exists := spec.Environment[key]; exists {
+			return value
+		}
+		return os.Getenv(key)
+	}
+
+	// A non-nil [exec.Cmd.Env] replaces [os.Environ], to override we need to
+	// merge [CommandSpec.Environment] and compute the entire environment.
+	environ := slices.Clone(os.Environ())
+	for key, value := range spec.Environment {
+		environ = append(environ, key+"="+value)
+	}
+
+	// Parse each command as a word separate list subject to variable expansion.
+	var result []*exec.Cmd
+	for _, line := range spec.Commands {
+		var name string
+		var args []string
+		for _, elem := range strings.Split(line, " ") {
+			switch {
+			case name == "":
+				name = elem
+			default:
+				args = append(args, os.Expand(elem, getenv))
+			}
+		}
+		cmd := exec.CommandContext(ctx, name, args...)
+		cmd.Env = environ
+		cmd.Dir = spec.Directory
+		result = append(result, cmd)
+	}
+	return result
+}
+
+// runCommands executes the provided command spec. Returns an error on failure.
+// Halts at the first failure. Options can override the execution behavior.
+//
+// - options.NoExec: commands are neither printed nor executed.
+// - options.DryRun: commands are printed, not executed.
+// - options.Verbose: commands are executed, output printed.
+func runCommands(parent context.Context, spec CommandSpec) error {
+	ctx, cancel := context.WithTimeout(parent, spec.Timeout)
+	defer cancel()
+
+	for lineno, cmd := range commands(ctx, spec) {
+		Debugf("runCommand: parsed spec.Commands[%d]: %q", lineno, cmd)
+		if options.NoExec {
+			continue
+		}
+		line := strings.Join(cmd.Args, " ")
+		Infof("Running command %s", line)
+		if options.DryRun {
+			fmt.Println(line)
+			continue
+		}
+
+		if options.Verbose {
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+		}
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("command %q failed: %w", line, err)
+		}
+	}
+	return nil
 }

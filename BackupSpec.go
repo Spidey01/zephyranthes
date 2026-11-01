@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Zlib
-// Copyright 2024, Terry M. Poulin.
+// Copyright 2024-2026, Terry M. Poulin.
 
 package main
 
@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -22,6 +23,22 @@ type BackupSpec struct {
 	Format string `yaml:"format" json:"format"`
 	// What to stuff in the archive.
 	Contents []string `yaml:"contents" json:"contents"`
+	// Commands to run before contents are added to the archive.
+	Before CommandSpec `yaml:"before" json:"before"`
+	// Commands to run after contents are added to the archive.
+	After CommandSpec `yaml:"after" json:"after"`
+}
+
+// Defines how to execute external commands as part of the backup process.
+type CommandSpec struct {
+	// Overrides the working directory for the command.
+	Directory string `yaml:"directory" json:"directory"`
+	// Overrides the environment inherited from os.Environ.
+	Environment map[string]string `yaml:"environment" json:"environment"`
+	// Defines commands to be run before the backup contents are archived.
+	Commands []string `yaml:"commands" json:"commands"`
+	// Timeout is the execution deadline for running Commands.
+	Timeout time.Duration `yaml:"timeout" json:"timeout"`
 }
 
 const (

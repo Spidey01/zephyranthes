@@ -45,10 +45,16 @@ Each backup specification object contains the following fields:
   - **tgz**, **tar.gz**: tape archive compressed with [**gzip**(1)](man(gzip))
   - **tzst**, **tar.zst**: tape archive compressed with [**zstd**(1)](man(zstd))
 - **contents**: list of files to backup in the archive.
+- **before**, **after**: external commands to run before/after contents are added to the archive.
+  - **commands**: list of commands to execute. Does not invoke the shell.
+  - **directory**: overrides starting directory of commands.
+  - **environment**: overrides starting environment of commands.
+  - **timeout**: limits runtime of the commands list; parsed as a duration string.
 
 These "backup spec" objects defines a single archive, and each backup
 specification file defines one or more backup spec. There is no practical limit
-on the number of backup of archives that may be specified in one file.
+on the number of backup of archives that may be specified in one file. Backups
+are executed sequentually in the order defined.
 
 Fields that define a file path are subject to environment variable expansion
 using syntax similar to Bourne shells. "`$HOME`" and "`${HOME}`" may both be
@@ -58,6 +64,32 @@ Relative paths are resolved using the current working directory. This may be
 controlled naturally by changing the startup directory of the program before
 running zephyr, or by using the **-C** or **--directory** option to change the
 working directory before any backups are run.
+
+Executing `before` occurs before the archive is created. If any of the commands
+list returns non-zero, the backup fails and no archive is created. This can be
+used to prepare for the backup. For example dumping a database to a path
+specified in `contents` or mounting the filesystem where `path` will be written.
+
+Executing `after` occurs after the archive has been closed. If the archive
+failed the `after` commands are executed to ensure they can cleanup actions
+taken by `before` commands.  If any of the `after` commands list returns
+non-zero, the backup is considered a failure.
+
+Executing external commands is enabled by default and can be disabled using the
+`--no-exec` option. When `--dry-run` is set, commands will be printed to
+standard output but not executed. Commands inherit the current working directory
+and environment; to unset some environment variable "foo" define it as an empty
+string in the override list. Commands are specified as a list. Each element is
+expanded for environment variables including those defined in the overrides,
+split by spaces to determine the argument vector, and then executed. Command
+output will only inherit the standard output and error streams when the `-v` or
+`--verbose` options are set. Commands are executed directly, if redirection or
+pipes are required then its necessary to execute a script instead. The timeout
+duration applies to the entire command list.
+
+A duration string is a possibly signed sequence of decimal numbers, each with
+optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m". Valid
+time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 
 ## EXAMPLES
 
