@@ -135,16 +135,16 @@ time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 
     ```yaml
     - name: Backup user files.
-    - path: "/mnt/${USER}.zip"
-    - format: zip
-    - contents:
+      path: "/mnt/${USER}.zip"
+      format: zip
+      contents:
         - Documents
         - Pictures
         - Videos
     - name: Backup system files.
-    - path: "/mnt/${HOSTNAME}.tgz"
-    - format: tgz
-    - contents:
+      path: "/mnt/${HOSTNAME}.tgz"
+      format: tgz
+      contents:
         - /etc
         - /usr/local
     ```
