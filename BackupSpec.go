@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"os"
+	"slices"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -80,4 +82,20 @@ func BackupSpecsFromFile(name string) ([]BackupSpec, error) {
 		return nil, err
 	}
 	return UnmarshalBackupSpecs(data)
+}
+
+func (s BackupSpec) Equal(o BackupSpec) bool {
+	return s.Name == o.Name &&
+		s.Path == o.Path &&
+		s.Format == o.Format &&
+		slices.Equal(s.Contents, o.Contents) &&
+		s.Before.Equal(o.Before) &&
+		s.After.Equal(o.After)
+}
+
+func (s CommandSpec) Equal(o CommandSpec) bool {
+	return s.Directory == o.Directory &&
+		maps.Equal(s.Environment, o.Environment) &&
+		slices.Equal(s.Commands, o.Commands) &&
+		s.Timeout == o.Timeout
 }

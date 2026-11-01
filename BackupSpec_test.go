@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 	"testing"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -25,14 +26,34 @@ var testBackupSpecs = []BackupSpec{
 		Format:   "secondformat",
 		Contents: []string{"ham", "spam", "eggs"},
 	},
+	{
+		Name:     "thirdspec",
+		Path:     "thirdpath",
+		Format:   "thirdformat",
+		Contents: []string{"one", "two", "three"},
+		Before: CommandSpec{
+			Timeout:   10 * time.Second,
+			Commands:  []string{"before", "commands"},
+			Directory: "/some/dir",
+			Environment: map[string]string{
+				"foo": "bar",
+			},
+		},
+		After: CommandSpec{
+			Timeout:   1 * time.Second,
+			Commands:  []string{"after", "commands"},
+			Directory: "/some/dir",
+			Environment: map[string]string{
+				"ham":  "spam",
+				"eggs": "",
+			},
+		},
+	},
 }
 
 func assertBackupSpecs(t *testing.T, actual, expected []BackupSpec) bool {
 	eq := func(e1, e2 BackupSpec) bool {
-		return e1.Name == e2.Name &&
-			e1.Path == e2.Path &&
-			e1.Format == e2.Format &&
-			slices.Equal(e1.Contents, e2.Contents)
+		return e1.Equal(e2)
 	}
 	if !slices.EqualFunc(actual, expected, eq) {
 		t.Errorf("specs do not match:\nactual  : %+v\nexpected: %+v\n", actual, expected)
