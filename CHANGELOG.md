@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## [v1.3.0] - 2026-10-31
+
+This release introduces support for running commands before and after an archive
+is created. This is mainly useful for tasks like mounting/unmounting a
+filesystem or running a separate script to run tools like pg_dump/mysqldump.
+
+## Added
+
+- Added new `before` and `after` command specs for running external commands.
+- New "--no-exec" option to disable running any external commands defined in a backup spec.
+- Added release.sh to build release binaries.
+
+## Changed
+
+- Upgraded Go toolchain 1.26.1 ➡ 1.27.3
+- Upgraded github.com/klauspost/compress v1.18.5 ➡ v1.20.3
+
 ## [v1.2.0] - 2026-03-21
 
 This release introduces support for several new flags, most notably a tar like
@@ -55,7 +72,8 @@ released :).
 
 ---
 
-- \[unreleased\]: [changes](https://github.com/Spidey01/zephyranthes/compare/v1.2.0...HEAD)
+- \[unreleased\]: [changes](https://github.com/Spidey01/zephyranthes/compare/v1.3.0...HEAD)
+- [[1.3.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.3.0)]: [Full Changelog](https://github.com/Spidey01/zephyranthes/compare/v1.2.0...v1.3.0)
 - [[1.2.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.2.0)]: [Full Changelog](https://github.com/Spidey01/zephyranthes/compare/v1.1.0...v1.2.0)
 - [[1.1.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.1.0)]: [Full Changelog](https://github.com/Spidey01/zephyranthes/compare/v1.0.0...v1.1.0)
 - [[1.0.0](https://github.com/Spidey01/zephyranthes/releases/tag/v1.0.0)]: [commits](https://github.com/Spidey01/zephyranthes/commits/v1.0.0/)
