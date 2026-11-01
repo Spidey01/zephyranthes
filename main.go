@@ -219,9 +219,15 @@ func commands(ctx context.Context, spec CommandSpec) []*exec.Cmd {
 // - options.NoExec: commands are neither printed nor executed.
 // - options.DryRun: commands are printed, not executed.
 // - options.Verbose: commands are executed, output printed.
+//
+// If spec.Timeout is zero then no timeout is applied.
 func runCommands(parent context.Context, spec CommandSpec) error {
-	ctx, cancel := context.WithTimeout(parent, spec.Timeout)
-	defer cancel()
+	ctx := parent
+	var cancel context.CancelFunc
+	if spec.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(parent, spec.Timeout)
+		defer cancel()
+	}
 
 	for lineno, cmd := range commands(ctx, spec) {
 		Debugf("runCommand: parsed spec.Commands[%d]: %q", lineno, cmd)
