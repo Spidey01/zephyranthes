@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -108,7 +109,16 @@ func backup(ctx context.Context, spec BackupSpec) error {
 	}
 	defer archive.Close()
 	Verbosef("Archiving contents...")
-	for _, fn := range spec.Contents {
+	var contents []string
+	for i, pattern := range spec.Contents {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			Errorf("Bad content item %d: %s: %v", i, pattern, err)
+			return err
+		}
+		contents = append(contents, matches...)
+	}
+	for _, fn := range contents {
 		if err = ctx.Err(); err != nil {
 			return err
 		}
