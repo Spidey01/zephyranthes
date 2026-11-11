@@ -1,4 +1,4 @@
-/zephyr
+/zephyr*
 *.zip
 *.tar
 *.log
