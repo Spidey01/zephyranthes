@@ -56,6 +56,9 @@ specification file defines one or more backup spec. There is no practical limit
 on the number of backup of archives that may be specified in one file. Backups
 are executed sequentually in the order defined.
 
+Each item in the `contents` list supports file globbing. E.g.,
+`/etc/foo.d/*.conf` will archive the matching files.
+
 Fields that define a file path are subject to environment variable expansion
 using syntax similar to Bourne shells. "`$HOME`" and "`${HOME}`" may both be
 used to expand the environment variable "`HOME`".
